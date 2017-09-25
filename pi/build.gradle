@@ -1,0 +1,11 @@
+
+sourceCompatibility = 1.8
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = [ "src/" ]
+project.ext.mainClassName = "com.homemods.relay.Relay"
+
+dependencies {
+    compile project(":core")
+    compile "com.pi4j:pi4j-core:1.1"
+}
