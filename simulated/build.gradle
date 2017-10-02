@@ -3,8 +3,35 @@ sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 sourceSets.main.java.srcDirs = [ "src/" ]
-project.ext.mainClassName = "com.homemods.relay.Relay"
+project.ext.mainClassName = "com.homemods.relay.simulated.RelaySimulated"
+project.ext.assetsDir = new File("../core/assets")
 
 dependencies {
     compile project(":core")
 }
+
+task run(dependsOn: classes, type: JavaExec) {
+    main = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = project.assetsDir
+    //noinspection GroovyAssignabilityCheck
+    ignoreExitValue = true
+}
+
+task dist(type: Jar) {
+    baseName = "Relay-Simulated"
+
+    from files(sourceSets.main.output.classesDir)
+    from files(sourceSets.main.output.resourcesDir)
+    from {configurations.compile.collect {zipTree(it)}}
+    //noinspection GroovyAssignabilityCheck
+    from files(project.assetsDir)
+
+    manifest {
+        //noinspection GroovyAssignabilityCheck
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+dist.dependsOn classes
