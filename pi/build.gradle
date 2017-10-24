@@ -6,9 +6,15 @@ sourceSets.main.java.srcDirs = [ "src/" ]
 project.ext.mainClassName = "com.homemods.relay.pi.RelayPi"
 project.ext.assetsDir = new File("../core/assets")
 
+repositories {
+    maven {
+        url "https://oss.sonatype.org/content/groups/public"
+    }
+}
+
 dependencies {
     compile project(":core")
-    compile "com.pi4j:pi4j-core:1.1"
+    compile "com.pi4j:pi4j-core:1.2-SNAPSHOT"
 }
 
 task run(dependsOn: classes, type: JavaExec) {
