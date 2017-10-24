@@ -7,10 +7,20 @@ import com.homemods.relay.pin.InputPin
 import com.homemods.relay.pin.OutputPin
 import com.homemods.relay.pin.PinEdge
 import com.homemods.relay.pin.PinState
+import com.homemods.relay.simulated.bluetooth.SimulatedBluetoothConnection
+import com.homemods.relay.simulated.bluetooth.SimulatedBluetoothServer
 import com.homemods.relay.simulated.pin.SimulatedInputPin
 import com.homemods.relay.simulated.pin.SimulatedPinFactory
+import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.io.OutputStream
+import javax.swing.BoxLayout
+import javax.swing.JButton
 import javax.swing.JFrame
+import javax.swing.JPanel
+import javax.swing.JScrollPane
 import javax.swing.JTable
+import javax.swing.JTextArea
 import javax.swing.WindowConstants
 import javax.swing.table.AbstractTableModel
 
@@ -22,6 +32,7 @@ fun main(args: Array<String>) {
     val jFrame = JFrame("Relay Simulation")
     
     val simulatedPinFactory = SimulatedPinFactory()
+    val simulatedBluetoothServer = SimulatedBluetoothServer()
     
     val tableModel = object : AbstractTableModel() {
         override fun getRowCount(): Int = 32
@@ -86,11 +97,48 @@ fun main(args: Array<String>) {
     }
     
     jFrame.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
-    jFrame.add(jTable)
+    
+    val panel = JPanel()
+    panel.layout = BoxLayout(panel, BoxLayout.PAGE_AXIS)
+    
+    panel.add(jTable)
+    
+    val button = JButton("New Bluetooth Connection")
+    button.addActionListener { action ->
+        val bluetoothFrame = JFrame("Bluetooth Connection")
+        val area = JTextArea(32, 1)
+        area.isEditable = false
+        
+        val connection = object : SimulatedBluetoothConnection() {
+            override fun openInputStream(): InputStream = ByteArrayInputStream(ByteArray(0))
+            
+            override fun openOutputStream(): OutputStream = object : OutputStream() {
+                override fun write(byte: Int) {
+                    area.append("$byte\n")
+                }
+            }
+            
+            override fun close() {
+                bluetoothFrame.isVisible = false
+                bluetoothFrame.dispose()
+            }
+        }
+        
+        bluetoothFrame.defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
+        bluetoothFrame.add(JScrollPane(area))
+        bluetoothFrame.pack()
+        bluetoothFrame.isVisible = true
+        
+        simulatedBluetoothServer.discoveryCallback?.invoke(connection)
+    }
+    
+    panel.add(button)
+    
+    jFrame.add(panel)
     jFrame.pack()
     jFrame.isVisible = true
     
-    Relay(simulatedPinFactory).run()
+    Relay(simulatedPinFactory, simulatedBluetoothServer).run()
     
     System.exit(0)
 }

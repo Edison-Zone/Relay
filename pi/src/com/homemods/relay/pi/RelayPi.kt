@@ -3,6 +3,7 @@
 package com.homemods.relay.pi
 
 import com.homemods.relay.Relay
+import com.homemods.relay.pi.bluetooth.PiBluetoothServer
 import com.homemods.relay.pi.pin.PiPinFactory
 
 /**
@@ -10,5 +11,5 @@ import com.homemods.relay.pi.pin.PiPinFactory
  */
 
 fun main(args: Array<String>) {
-    Relay(PiPinFactory()).run()
+    Relay(PiPinFactory(), PiBluetoothServer()).run()
 }
