@@ -30,15 +30,15 @@ class Relay(val pinFactory: PinFactory, val server: BluetoothServer) {
         //}
         
         val rand = Random()
-        val bytes = ByteArray(1)
+        //val bytes = ByteArray(1)
         //var num: Int
     
         for (i in 1..60) {
-            rand.nextBytes(bytes)
+            //rand.nextBytes(bytes)
             //num = bytes[0].toInt()
         
             //Send over our random byte
-            outputStream.write(bytes)
+            outputStream.write(rand.nextInt(Int.MAX_VALUE))
             outputStream.flush()
         
             /*
