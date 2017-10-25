@@ -19,24 +19,25 @@ class PiBluetoothServer : BluetoothServer {
         if (discoveryThread != null) throw Exception("Server already in discovery mode")
         
         running = false
-        discoveryThread = Thread({
-                                     val localDevice = LocalDevice.getLocalDevice()!!
-                                     localDevice.discoverable = DiscoveryAgent.GIAC
-            
-                                     val uuid = UUID("9fb18ac2a4fd865a79163c954fa189bf", false)
-                                     println(uuid)
-            
-                                     val url = "btspp://localhost:$uuid;name=RemoteBluetooth"
-            
-                                     val streamConnectionNotifier = Connector.open(url) as StreamConnectionNotifier
-            
-                                     while (running) {
-                                         val connection = streamConnectionNotifier.acceptAndOpen()!!
-                                         onDiscovery(PiBluetoothConnection(connection))
-                                     }
-            
-                                     streamConnectionNotifier.close()
-                                 }, "Bluetooth Discovery Thread").apply {
+        discoveryThread = Thread(
+                {
+                    val localDevice = LocalDevice.getLocalDevice()!!
+                    localDevice.discoverable = DiscoveryAgent.GIAC
+                
+                    val uuid = UUID("9fb18ac2a4fd865a79163c954fa189bf", false)
+                    println(uuid)
+                
+                    val url = "btspp://localhost:$uuid;name=RemoteBluetooth"
+                
+                    val streamConnectionNotifier = Connector.open(url) as StreamConnectionNotifier
+                
+                    while (running) {
+                        val connection = streamConnectionNotifier.acceptAndOpen()!!
+                        onDiscovery(PiBluetoothConnection(connection))
+                    }
+                
+                    streamConnectionNotifier.close()
+                }, "Bluetooth Discovery Thread").apply {
             isDaemon = true
             start()
         }
