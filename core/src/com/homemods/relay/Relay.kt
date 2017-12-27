@@ -1,7 +1,7 @@
 package com.homemods.relay
 
-import com.homemods.relay.bluetooth.BluetoothConnection
-import com.homemods.relay.bluetooth.BluetoothServer
+import com.homemods.relay.connection.ClientConnection
+import com.homemods.relay.connection.ConnectionFactory
 import com.homemods.relay.pin.PinFactory
 import java.util.Random
 
@@ -9,16 +9,19 @@ import java.util.Random
  * @author sergeys
  */
 
-class Relay(val pinFactory: PinFactory, val server: BluetoothServer) {
+class Relay(val pinFactory: PinFactory, val connectionFactory: ConnectionFactory) {
     fun run() {
-        val connection = server.run {
-            var conn: BluetoothConnection? = null
+        val connection = connectionFactory.run {
+            var conn: ClientConnection? = null
+            
             beginDiscovery { connection ->
                 conn = connection
             }
             while (conn == null) {
                 Thread.sleep(1000)
             }
+        
+            endDiscovery()
             conn!!
         }
     

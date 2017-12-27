@@ -14,9 +14,9 @@ repositories {
 
 dependencies {
     compile project(":core")
-    compile "com.pi4j:pi4j-core:1.2-SNAPSHOT"
-    compile "net.sf.bluecove:bluecove:2.1.0"
-    compile "net.sf.bluecove:bluecove-gpl:2.1.0"
+    //compile "com.pi4j:pi4j-core:1.2-SNAPSHOT"
+    //compile "de.serviceflow:lbt4j:0.4.5"
+    compile "com.github.bdeneuter:dbus-java:2.7"
 }
 
 task run(dependsOn: classes, type: JavaExec) {

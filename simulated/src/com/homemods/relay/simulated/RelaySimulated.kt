@@ -7,8 +7,8 @@ import com.homemods.relay.pin.InputPin
 import com.homemods.relay.pin.OutputPin
 import com.homemods.relay.pin.PinEdge
 import com.homemods.relay.pin.PinState
-import com.homemods.relay.simulated.bluetooth.SimulatedBluetoothConnection
-import com.homemods.relay.simulated.bluetooth.SimulatedBluetoothServer
+import com.homemods.relay.simulated.connection.SimulatedClientConnection
+import com.homemods.relay.simulated.connection.SimulatedConnectionFactory
 import com.homemods.relay.simulated.pin.SimulatedInputPin
 import com.homemods.relay.simulated.pin.SimulatedPinFactory
 import java.io.ByteArrayInputStream
@@ -32,7 +32,7 @@ fun main(args: Array<String>) {
     val jFrame = JFrame("Relay Simulation")
     
     val simulatedPinFactory = SimulatedPinFactory()
-    val simulatedBluetoothServer = SimulatedBluetoothServer()
+    val simulatedBluetoothServer = SimulatedConnectionFactory()
     
     val tableModel = object : AbstractTableModel() {
         override fun getRowCount(): Int = 32
@@ -103,13 +103,13 @@ fun main(args: Array<String>) {
     
     panel.add(jTable)
     
-    val button = JButton("New Bluetooth Connection")
+    val button = JButton("New Connection")
     button.addActionListener { action ->
-        val bluetoothFrame = JFrame("Bluetooth Connection")
+        val bluetoothFrame = JFrame("Connection")
         val area = JTextArea(32, 1)
         area.isEditable = false
-        
-        val connection = object : SimulatedBluetoothConnection() {
+    
+        val connection = object : SimulatedClientConnection() {
             override fun openInputStream(): InputStream = ByteArrayInputStream(ByteArray(0))
             
             override fun openOutputStream(): OutputStream = object : OutputStream() {

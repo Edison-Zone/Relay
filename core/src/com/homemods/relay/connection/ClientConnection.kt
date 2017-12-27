@@ -1,4 +1,4 @@
-package com.homemods.relay.bluetooth
+package com.homemods.relay.connection
 
 import java.io.InputStream
 import java.io.OutputStream
@@ -6,7 +6,7 @@ import java.io.OutputStream
 /**
  * @author sergeys
  */
-interface BluetoothConnection {
+interface ClientConnection {
     fun openInputStream(): InputStream
     fun openOutputStream(): OutputStream
     
