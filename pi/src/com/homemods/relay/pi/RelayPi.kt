@@ -2,6 +2,9 @@
 
 package com.homemods.relay.pi
 
+import com.homemods.relay.pi.bluetooth.BluetoothClient
+import com.homemods.relay.pi.bluetooth.BluetoothServer
+
 //Old Imports
 /*
 import de.serviceflow.codegenj.ObjectManager
@@ -16,6 +19,57 @@ import java.util.logging.Level
  */
 
 fun main(args: Array<String>) {
+    
+    //System.loadLibrary("bluetooth")
+    System.loadLibrary("EdisonNative")
+    
+    if (args.contains("client")) { //Client code
+        val bluetoothClient = BluetoothClient.native()
+        
+        val bluetoothClientSocket = bluetoothClient.startClient()
+        
+        //Ports are odd numbers in the range from 0x1001 to 0x8FFF
+        val bluetoothSocket = bluetoothClientSocket.connect("B8:27:EB:0E:5F:5F", 0x1001)
+        
+        assert(bluetoothClientSocket == bluetoothSocket)
+        
+        val bytes = ByteArray(1024)
+        
+        val count = bluetoothSocket.read(bytes, 1024)
+        
+        for (i in 0 until count) {
+            println(bytes[i])
+            bytes[i]++
+        }
+        
+        bluetoothSocket.write(bytes, count)
+        
+        bluetoothSocket.close()
+    } else { //Server code
+        val bluetoothServer = BluetoothServer.native()
+        
+        val bluetoothServerSocket = bluetoothServer.startServer(0x1001)
+        
+        bluetoothServerSocket.listen()
+        
+        val connection = bluetoothServerSocket.acceptOneConnection()
+        
+        val bytes = ByteArray(1024) { i -> 10 }
+        
+        connection.write(bytes, 64)
+        
+        val recieved = ByteArray(1024)
+        
+        val count = connection.read(recieved, 1024)
+        
+        for (i in 0 until count) {
+            println("${bytes[i]} -> ${recieved[i]}")
+        }
+        
+        connection.close()
+        bluetoothServerSocket.close()
+    }
+    
     //Begin Old Code
     //-------------------------------------------------------------------------------
     /*
