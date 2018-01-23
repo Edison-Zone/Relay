@@ -49,18 +49,22 @@ fun main(args: Array<String>) {
         start()
     }
     
-    repeat(15) {
-        val bytes = stream.read().decrypted()
-        val messageID = getMessageID(bytes)
-        println("Recieved message $messageID")
-        
-        val data = getMessageData(bytes)
-        if (data[0].toInt() and 0xFF == 0b0000) { //If it should make the next byte the state of the motor
-            val state = data[1].toInt() and 0xFF //Get rid of the sign extension
-    
-            millis = 0.5 + 2 * state / 255.0
+    try {
+        while (true) {
+            val bytes = stream.read().decrypted()
+            val messageID = getMessageID(bytes)
+            println("Recieved message $messageID")
+            
+            val data = getMessageData(bytes)
+            if (data[0].toInt() and 0xFF == 0b0000) { //If it should make the next byte the state of the motor
+                val state = data[1].toInt() and 0xFF //Get rid of the sign extension
+                
+                millis = 0.5 + 2 * state / 255.0
+            }
         }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        bluetoothSocket.close()
     }
-    
-    bluetoothSocket.close()
 }
