@@ -15,6 +15,8 @@ open class BluetoothSocket(protected val socket: Int, private val impl: Impl) {
     
     fun close() = impl.close(socket)
     
+    fun createStream() = BluetoothStream(this)
+    
     interface Impl {
         fun read(socket: Int, bytes: ByteArray, count: Int): Int
         

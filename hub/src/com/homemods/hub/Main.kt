@@ -3,6 +3,9 @@
 package com.homemods.hub
 
 import com.homemods.bluetooth.BluetoothServer
+import com.homemods.message.encrypted
+import com.homemods.message.formatMessage
+import kotlin.experimental.inv
 
 /**
  * @author sergeys
@@ -14,18 +17,26 @@ fun main(args: Array<String>) {
     
     bluetoothServerSocket.listen()
     
+    //Get a connection
     val connection = bluetoothServerSocket.acceptOneConnection()
     
-    val bytes = ByteArray(1024) { i -> 10 }
+    val stream = connection.createStream()
     
-    connection.write(bytes, 64)
+    val byteArray = ByteArray(2)
+    byteArray[0] = 0b0000 //Set motor 0 to next ubyte
+    byteArray[1] = 0b0000 //Position 0
     
-    val recieved = ByteArray(1024)
+    var msgId = 0
     
-    val count = connection.read(recieved, 1024)
-    
-    for (i in 0 until count) {
-        println("${bytes[i]} -> ${recieved[i]}")
+    repeat(15) {
+        val message = formatMessage(msgId++, byteArray)
+        //Send the message
+        println("Sending message $msgId")
+        stream.write(message.encrypted())
+        
+        Thread.sleep(1000)
+        
+        byteArray[1] = byteArray[1].inv() //Swap from position 0 to 255
     }
     
     connection.close()

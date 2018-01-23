@@ -8,4 +8,6 @@ interface PinFactory {
                        pinName: String? = null): InputPin
     
     fun createOutputPin(pin: Int, defaultState: PinState = PinState.OFF, pinName: String? = null): OutputPin
+    
+    fun createPwmPin(pin: Int, pinName: String? = null, defaultValue: Int? = null): PwmPin
 }

@@ -11,6 +11,12 @@ class PiPinFactory : PinFactory {
     val pins = arrayOfNulls<Any>(32)
     val gpio = GpioFactory.getInstance()
     
+    init {
+        Runtime.getRuntime().addShutdownHook(Thread {
+            gpio.shutdown()
+        })
+    }
+    
     override fun createInputPin(pin: Int, pinResistance: PinResistance, pinName: String?): InputPin {
         if (pin > 31 || pin < 0) throw PinDoesNotExistException("Pin $pin does not exist")
         
@@ -41,4 +47,23 @@ class PiPinFactory : PinFactory {
         return pins[pin] as OutputPin
     }
     
+    override fun createPwmPin(pin: Int, pinName: String?, defaultValue: Int?): PwmPin {
+        if (pin > 31 || pin < 0) throw PinDoesNotExistException("Pin $pin does not exist")
+        
+        
+        if (pins[pin] == null) {
+            val pwmPin = if (pinName == null) {
+                gpio.provisionPwmOutputPin(RaspiPin.getPinByAddress(pin))
+            } else if (defaultValue == null) {
+                gpio.provisionPwmOutputPin(RaspiPin.getPinByAddress(pin), pinName)
+            } else {
+                gpio.provisionPwmOutputPin(RaspiPin.getPinByAddress(pin), pinName, defaultValue)
+            }
+            pins[pin] = PiPwmPin(pwmPin)
+        } else {
+            throw PinAlreadyBoundException("Pin $pin already bound to a ${pins[pin]!!::class.java.simpleName}")
+        }
+        
+        return pins[pin] as PwmPin
+    }
 }
