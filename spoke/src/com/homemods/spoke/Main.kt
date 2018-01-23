@@ -57,15 +57,8 @@ fun main(args: Array<String>) {
         val data = getMessageData(bytes)
         if (data[0].toInt() and 0xFF == 0b0000) { //If it should make the next byte the state of the motor
             val state = data[1].toInt() and 0xFF //Get rid of the sign extension
-            //Expecting a value 0 to 1024
-            //This means a duty cycle of 2.5% is 25.6
-            //A duty cycle of 12.5% is 128
-            if (state > 0) {
-                millis = 2.0
-            } else {
-                millis = 1.0
-            }
-            //pwmPin.setPwm(((state/25.5 + 2.5)/100*1024).roundToInt())
+    
+            millis = 0.5 + 2 * state / 255.0
         }
     }
     
