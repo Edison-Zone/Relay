@@ -18,7 +18,9 @@ import java.net.Socket
 
 var bluetoothServerSocket: BluetoothServerSocket? = null
 var connection: BluetoothSocket? = null
+var connection2: BluetoothSocket? = null
 var stream: BluetoothStream? = null
+var stream2: BluetoothStream? = null
 
 var serverSocket: ServerSocket? = null
 var socket: Socket? = null
@@ -38,12 +40,13 @@ fun main(args: Array<String>) {
         start()
     }
     
-    while (input == null && stream == null) {
-        //Keep waiting until we have both connections
+    while (input == null || stream == null || stream2 == null) {
+        //Keep waiting until we have all connections
         Thread.sleep(100)
     }
     
     val stream = stream!!
+    val stream2 = stream2!!
     val input = input!!
     
     val byteArray = ByteArray(2)
@@ -55,10 +58,17 @@ fun main(args: Array<String>) {
     try {
         while (true) {
             //Read byte from input and copy to bluetooth message
-            byteArray[1] = (input.read() and 0xFF).toByte()
-            
+            val read = input.read()
+            val moduleNum = read and 0xFF00
+    
+            byteArray[1] = (read and 0xFF).toByte()
+    
             //Send it to the spoke
-            stream.write(formatMessage(msgId++, byteArray).encrypted())
+            if (moduleNum == 0) { //motor 1
+                stream
+            } else { //motor 2
+                stream2
+            }.write(formatMessage(msgId++, byteArray).encrypted())
         }
     } catch (e: Exception) {
         e.printStackTrace()
@@ -79,6 +89,11 @@ fun createStream() {
     connection = bluetoothServerSocket?.acceptOneConnection()
     
     stream = connection?.createStream()
+    
+    //Get a connection
+    connection2 = bluetoothServerSocket?.acceptOneConnection()
+    
+    stream2 = connection?.createStream()
 }
 
 fun createSocket() {
@@ -92,6 +107,7 @@ fun createSocket() {
 fun closeAll() {
     bluetoothServerSocket?.close()
     connection?.close()
+    connection2?.close()
     
     serverSocket?.close()
     socket?.close()
