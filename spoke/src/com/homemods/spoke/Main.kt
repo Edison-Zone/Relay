@@ -7,6 +7,7 @@ import com.homemods.message.decrypted
 import com.homemods.message.getMessageData
 import com.homemods.message.getMessageID
 import com.homemods.spoke.pin.PiPinFactory
+import kotlin.math.roundToLong
 
 /**
  * @author sergeys
@@ -31,18 +32,16 @@ fun main(args: Array<String>) {
     
     Thread {
         while (true) {
-            val int = millis.toLong()
-            val nanos = ((millis - int) * 1000000).toInt()
+            val nanos = ((millis) * 1000000).roundToLong()
+            val endTime = System.nanoTime() + nanos
             
             pwmPin.on()
-            Thread.sleep(int, nanos)
+            while (System.nanoTime() < endTime);
             pwmPin.off()
-            
-            val remainder = 50 - millis
-            val rint = remainder.toLong()
-            val rnanos = ((remainder - rint) * 1000000).toInt()
-            
-            Thread.sleep(rint, rnanos)
+    
+            val restEnd = 50_000_000 - nanos + endTime
+    
+            while (System.nanoTime() < restEnd);
         }
     }.apply {
         name = "PWM Thread"
