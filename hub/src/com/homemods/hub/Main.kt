@@ -51,19 +51,35 @@ fun main(args: Array<String>) {
     
     val byteArray = ByteArray(2)
     byteArray[0] = 0b0000 //Set motor 0 to next ubyte
-    byteArray[1] = 0b0000 //Position 0
+    byteArray[1] = 0b01111111 //Position 0
     
     var msgId = 0
+    
+    stream.write(formatMessage(msgId++, byteArray).encrypted())
+    stream2.write(formatMessage(msgId++, byteArray).encrypted())
+    
+    val recieveBuffer = ByteArray(2)
     
     try {
         while (true) {
             //Read byte from input and copy to bluetooth message
-            val read = input.read()
-            val moduleNum = read and 0xFF00
+            input.read(recieveBuffer)
+            val moduleNum = recieveBuffer[0].toInt()
     
-            byteArray[1] = (read and 0xFF).toByte()
+            println("Recieved from app for module $moduleNum")
+    
+            byteArray[1] = recieveBuffer[1]
     
             //Send it to the spoke
+            if (moduleNum == 0) { //motor 1
+                stream
+            } else { //motor 2
+                stream2
+            }.write(formatMessage(msgId++, byteArray).encrypted())
+    
+            byteArray[1] = 0b01111111
+            Thread.sleep(1000)
+    
             if (moduleNum == 0) { //motor 1
                 stream
             } else { //motor 2
@@ -93,7 +109,7 @@ fun createStream() {
     //Get a connection
     connection2 = bluetoothServerSocket?.acceptOneConnection()
     
-    stream2 = connection?.createStream()
+    stream2 = connection2?.createStream()
 }
 
 fun createSocket() {
@@ -102,6 +118,8 @@ fun createSocket() {
     socket = serverSocket?.accept()
     
     input = socket?.getInputStream()
+    
+    println("Connected to ${socket?.localAddress?.hostAddress}")
 }
 
 fun closeAll() {

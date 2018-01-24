@@ -46,8 +46,8 @@ fun formatMessage(location: ByteArray, messageId: Int, data: ByteArray): Int {
 }
 
 fun getMessageID(messageBytes: ByteArray): Int {
-    return (messageBytes[0].toInt() shl 16) or (messageBytes[1].toInt() shl 8) or
-            (messageBytes[2].toInt())
+    return ((messageBytes[0].toInt() and 0xFF) shl 16) or ((messageBytes[1].toInt() and 0xFF) shl 8) or
+            ((messageBytes[2].toInt() and 0xFF))
 }
 
 fun getMessageData(messageBytes: ByteArray): ByteArray {
