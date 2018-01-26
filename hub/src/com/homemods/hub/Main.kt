@@ -9,7 +9,6 @@ import com.homemods.bluetooth.BluetoothStream
 import com.homemods.message.encrypted
 import com.homemods.message.formatMessage
 import java.io.InputStream
-import java.net.ServerSocket
 import java.net.Socket
 
 /**
@@ -22,7 +21,6 @@ var connection2: BluetoothSocket? = null
 var stream: BluetoothStream? = null
 var stream2: BluetoothStream? = null
 
-var serverSocket: ServerSocket? = null
 var socket: Socket? = null
 var input: InputStream? = null
 
@@ -40,13 +38,11 @@ fun main(args: Array<String>) {
         start()
     }
     
-    while (input == null || stream == null || stream2 == null) {
-        //Keep waiting until we have all connections
+    while (input == null) {
+        //Hub only requires one connection
         Thread.sleep(100)
     }
     
-    val stream = stream!!
-    val stream2 = stream2!!
     val input = input!!
     
     val byteArray = ByteArray(2)
@@ -54,9 +50,6 @@ fun main(args: Array<String>) {
     byteArray[1] = 0b01111111 //Position 0
     
     var msgId = 0
-    
-    stream.write(formatMessage(msgId++, byteArray).encrypted())
-    stream2.write(formatMessage(msgId++, byteArray).encrypted())
     
     val recieveBuffer = ByteArray(2)
     
@@ -75,7 +68,7 @@ fun main(args: Array<String>) {
                 stream
             } else { //motor 2
                 stream2
-            }.write(formatMessage(msgId++, byteArray).encrypted())
+            }?.write(formatMessage(msgId++, byteArray).encrypted())
     
             byteArray[1] = 0b01111111
             Thread.sleep(1000)
@@ -84,7 +77,7 @@ fun main(args: Array<String>) {
                 stream
             } else { //motor 2
                 stream2
-            }.write(formatMessage(msgId++, byteArray).encrypted())
+            }?.write(formatMessage(msgId++, byteArray).encrypted())
         }
     } catch (e: Exception) {
         e.printStackTrace()
@@ -101,25 +94,30 @@ fun createStream() {
     
     bluetoothServerSocket?.listen()
     
+    val msgId = 0
+    val byteArray = ByteArray(2)
+    byteArray[0] = 0b0000 //Set motor 0 to next ubyte
+    byteArray[1] = 0b01111111 //Position 0
+    
+    
     //Get a connection
     connection = bluetoothServerSocket?.acceptOneConnection()
     
     stream = connection?.createStream()
     
+    stream?.write(formatMessage(msgId, byteArray).encrypted())
+    
     //Get a connection
     connection2 = bluetoothServerSocket?.acceptOneConnection()
     
     stream2 = connection2?.createStream()
+    stream2?.write(formatMessage(msgId, byteArray).encrypted())
 }
 
 fun createSocket() {
-    serverSocket = ServerSocket(11899)
-    
-    socket = serverSocket?.accept()
+    socket = Socket("128.61.105.54", 11899)
     
     input = socket?.getInputStream()
-    
-    println("Connected to ${socket?.localAddress?.hostAddress}")
 }
 
 fun closeAll() {
@@ -127,7 +125,6 @@ fun closeAll() {
     connection?.close()
     connection2?.close()
     
-    serverSocket?.close()
     socket?.close()
     input?.close()
 }
