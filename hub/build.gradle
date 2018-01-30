@@ -3,7 +3,7 @@ sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 sourceSets.main.java.srcDirs = [ "src/" ]
-project.ext.mainClassName = "com.homemods.hub.Main"
+project.ext.mainClassName = "com.edison.hub.Main"
 project.ext.assetsDir = new File("../core/assets")
 
 repositories {

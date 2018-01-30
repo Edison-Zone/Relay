@@ -1,4 +1,4 @@
-package com.homemods.message
+package com.edison.message
 
 import java.security.SecureRandom
 import java.util.Base64
