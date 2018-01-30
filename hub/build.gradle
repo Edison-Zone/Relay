@@ -10,10 +10,14 @@ repositories {
     maven {
         url "https://oss.sonatype.org/content/groups/public"
     }
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {
     compile project(":core")
+    compile name: 'tinyb'
 }
 
 task run(dependsOn: classes, type: JavaExec) {

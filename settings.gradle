@@ -1,1 +1,1 @@
-include 'core', 'hub', 'spoke'
+include 'core', 'hub'
