@@ -99,12 +99,15 @@ fun main(args: Array<String>) {
             for (j in 0 until size) {
                 sent[j] = (lastInt * lastInt++).toByte()
             }
-            
-            dataSendChar.writeValue(sent)
+    
+            println("Sending $count")
+    
             count++
+            dataSendChar.writeValue(sent)
         }
     }
     
+    println("Registering EVN")
     
     dataReadChar.enableValueNotifications { bytes ->
         if (bytes != null) {
@@ -120,9 +123,31 @@ fun main(args: Array<String>) {
         }
     }
     
+    println("Beginning sends")
     doSend()
+    
+    while (count < times) {
+        Thread.sleep(100)
+    }
+    
+    println("A")
     
     dataReadChar.disableValueNotifications()
     
+    println("B")
+    
     device.disconnect()
+    
+    println("C")
+    
+    println("D")
+    
+    dataSendChar.close()
+    dataReadChar.close()
+    service.close()
+    device.close()
+    
+    println("E")
+    
+    System.exit(0)
 }
