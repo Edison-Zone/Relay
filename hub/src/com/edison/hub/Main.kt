@@ -4,7 +4,6 @@ package com.edison.hub
 
 import com.edison.message.encrypted
 import com.edison.message.formatMessage
-import tinyb.BluetoothDevice
 import java.io.InputStream
 import java.net.Socket
 
@@ -15,13 +14,9 @@ import java.net.Socket
 /*
  * CONSTANTS
  */
-val USE_NAME = true
-
-val deviceName1 = "HomeModesModule1"
-val deviceAddress1 = ""
-
-val deviceName2 = "HomeModesModule2"
-val deviceAddress2 = ""
+val modules = arrayOf<Module>(
+        Module("HomeModesModule1", true),
+        Module("HomeModesModule2", true))
 
 val serviceUUID = "19B10000-E8F2-537E-4F6C-D104768A1214"
 
@@ -34,9 +29,6 @@ val serverPort = 11899
 /*
  * PROGRAM DATA
  */
-
-var module1: Module? = null
-var module2: Module? = null
 
 var socket: Socket? = null
 var input: InputStream? = null
@@ -64,9 +56,10 @@ fun main(args: Array<String>) {
     
     val input = input!!
     
-    val byteArray = ByteArray(2)
-    byteArray[0] = 0b0000 //Set motor 0 to next ubyte
-    byteArray[1] = 0b01111111 //Position 0
+    val byteArray = ByteArray(3)
+    byteArray[0] = 0x02 //Push next byte to the stack
+    byteArray[1] = 0x00 //The data byte pushed to the stack
+    byteArray[2] = 0x05 //Set variable 0 to the value given by the top value on the stack
     
     var msgId = 0
     
@@ -81,22 +74,17 @@ fun main(args: Array<String>) {
             println("Recieved from app for module $moduleNum")
             
             byteArray[1] = recieveBuffer[1]
-            
-            //Send it to the spoke
-            if (moduleNum == 0) { //motor 1
-                module1
-            } else { //motor 2
-                module2
-            }?.output?.writeValue(formatMessage(msgId++, byteArray).encrypted())
-            
-            byteArray[1] = 0b01111111
-            Thread.sleep(1000)
-            
-            if (moduleNum == 0) { //motor 1
-                module1
-            } else { //motor 2
-                module2
-            }?.output?.writeValue(formatMessage(msgId++, byteArray).encrypted())
+    
+            val m = modules[moduleNum]
+    
+            m.output?.writeValue(formatMessage(msgId++, byteArray).encrypted())
+    
+            if (moduleNum == 0) {
+                byteArray[1] = 0b01111111
+                Thread.sleep(1000)
+        
+                m.output?.writeValue(formatMessage(msgId++, byteArray).encrypted())
+            }
         }
     } catch (e: Exception) {
         e.printStackTrace()
@@ -111,34 +99,12 @@ fun createBluetooth() {
     
     //Keep searching until we get the connections
     while (true) {
-        if (module1 == null || module2 == null) {
+        if (!modules.all(Module::connected)) {
             //Start discovery
             BluetoothController.discovering = true
-            
-            if (module1 == null) {
-                val m = if (USE_NAME) {
-                    BluetoothController.tryFindDeviceByName(deviceName1)
-                } else {
-                    BluetoothController.tryFindDeviceByAdd(deviceAddress1)
-                }
-                
-                if (m != null) {
-                    m.connect()
-                    module1 = tryLoadDevice(m)
-                }
-            }
-            
-            if (module2 == null) {
-                val m = if (USE_NAME) {
-                    BluetoothController.tryFindDeviceByName(deviceName2)
-                } else {
-                    BluetoothController.tryFindDeviceByAdd(deviceAddress2)
-                }
-                
-                if (m != null) {
-                    m.connect()
-                    module2 = tryLoadDevice(m)
-                }
+        
+            modules.filter { m -> !m.connected }.forEach { m ->
+                m.tryConnect()
             }
         } else {
             BluetoothController.discovering = false
@@ -157,29 +123,7 @@ fun createSocket() {
 }
 
 fun closeAll() {
-    module1?.close()
-    module2?.close()
+    modules.forEach(Module::close)
     socket?.close()
     input?.close()
-}
-
-fun tryLoadDevice(device: BluetoothDevice): Module? {
-    while (!device.servicesResolved) {
-        Thread.sleep(100)
-    }
-    
-    val service = device.services.firstOrNull { s -> s.uuid == serviceUUID.toLowerCase() }
-    
-    if (service == null) {
-        return null
-    }
-    
-    val charSend = service.characteristics.firstOrNull { c -> c.uuid == dataSendUUID.toLowerCase() }
-    val charRead = service.characteristics.firstOrNull { c -> c.uuid == dataReadUUID.toLowerCase() }
-    
-    if (charRead == null || charSend == null) {
-        return null
-    }
-    
-    return Module(device, service, charSend, charRead)
 }
