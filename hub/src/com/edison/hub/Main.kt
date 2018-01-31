@@ -181,5 +181,5 @@ fun tryLoadDevice(device: BluetoothDevice): Module? {
         return null
     }
     
-    return Module(device, charSend, charRead)
+    return Module(device, service, charSend, charRead)
 }
