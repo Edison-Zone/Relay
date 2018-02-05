@@ -1,6 +1,7 @@
 package com.edison.hub
 
 import tinyb.BluetoothDevice
+import tinyb.BluetoothException
 import tinyb.BluetoothGattCharacteristic
 import tinyb.BluetoothGattService
 
@@ -24,24 +25,34 @@ data class Module(val id: String, val isName: Boolean) {
     
     fun tryConnect() {
         if (!connected) {
-            val d = if (isName) {
-                BluetoothController.tryFindDeviceByName(id)
-            } else {
-                BluetoothController.tryFindDeviceByAdd(id)
-            }
+            try {
+                val d = if (isName) {
+                    BluetoothController.tryFindDeviceByName(id)
+                } else {
+                    BluetoothController.tryFindDeviceByAdd(id)
+                }
+        
+                if (d != null) {
+                    device = d
+                    d.connect()
             
-            if (d != null) {
-                device = d
-                d.connect()
-                
-                tryLoadDevice(d)
+                    connected = true
+            
+                    tryLoadDevice(d)
+            
+                    println("Connected to modules")
+                }
+            } catch (e: BluetoothException) {
+                close()
             }
         }
     }
     
     fun close() {
         if (connected) {
-            device?.disconnect()
+            if (device?.connected == true) {
+                device?.disconnect()
+            }
             service?.close()
             output?.close()
             input?.close()

@@ -4,6 +4,7 @@ package com.edison.hub
 
 import com.edison.message.encrypted
 import com.edison.message.formatMessage
+import com.edison.message.pad
 import java.io.InputStream
 import java.net.Socket
 
@@ -61,6 +62,15 @@ fun main(args: Array<String>) {
     byteArray[1] = 0x00 //The data byte pushed to the stack
     byteArray[2] = 0x05 //Set variable 0 to the value given by the top value on the stack
     
+    val byteArray2 = byteArrayOf(0x03, //Push next two bytes
+                                 0x03, // See next
+                                 0xE8.toByte(), // 0000 0011 1110 1000 = 1000
+                                 0x0C, // Wait ms given by last two bytes on the stack
+                                 0x02, //Push next byte
+                                 0x7F, //127 or center position
+                                 0x05) //Set variable 0 to the value given by the top value on the stack
+    
+    
     var msgId = 0
     
     val recieveBuffer = ByteArray(2)
@@ -73,17 +83,18 @@ fun main(args: Array<String>) {
             
             println("Recieved from app for module $moduleNum")
             
-            byteArray[1] = recieveBuffer[1]
-    
             val m = modules[moduleNum]
     
-            m.output?.writeValue(formatMessage(msgId++, byteArray).encrypted())
+            byteArray[1] = recieveBuffer[1]
     
+            m.output?.writeValue(formatMessage(msgId++, byteArray).pad().encrypted())
+    
+            println("Sent to module")
+            
             if (moduleNum == 0) {
-                byteArray[1] = 0b01111111
-                Thread.sleep(1000)
-        
-                m.output?.writeValue(formatMessage(msgId++, byteArray).encrypted())
+                //Thread.sleep(1000)
+                m.output?.writeValue(formatMessage(msgId++, byteArray2).pad().encrypted())
+                println("Sent to module2")
             }
         }
     } catch (e: Exception) {
@@ -92,6 +103,8 @@ fun main(args: Array<String>) {
         //Don't ask me how the code will reach this unless it causes an exception
         closeAll()
     }
+    
+    System.exit(0)
 }
 
 fun createBluetooth() {
@@ -111,15 +124,17 @@ fun createBluetooth() {
         }
         //Try again after a second
         Thread.sleep(1000)
-        
-        break
     }
 }
 
 fun createSocket() {
+    println("Searching for server")
     socket = Socket(serverIP, serverPort)
     
     input = socket?.getInputStream()
+    
+    socket?.getOutputStream()?.write(0)
+    println("Connected to server")
 }
 
 fun closeAll() {
